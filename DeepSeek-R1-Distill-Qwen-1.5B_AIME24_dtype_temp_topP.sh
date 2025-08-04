@@ -5,7 +5,7 @@ LOCAL_DIR="/app"
 OUTPUT_DIR="/app/output"
 
 # ==== Experiment Grid ====
-MODEL="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
+MODEL="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 TASK="custom|aime24|0|0"
 
 # Decoding parameters

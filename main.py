@@ -56,13 +56,20 @@ def main():
         print("max_model_length is -1. Setting it to None.")
         max_model_length = None
 
-    folder = args.model.replace("/", "_")
-    fname = f"{args.seed}-{args.temperature}-{args.top_p}-{args.dtype}-{args.task.split('|')[1]}-{args.max_new_tokens}"
+    # Create a meaningful run name based on parameters
+    model_folder_name = args.model.replace("/", "_")
+    run_name = f"{args.seed}-{args.temperature}-{args.top_p}-{args.dtype}-{args.task.split('|')[1]}-{args.max_new_tokens}"
     if max_model_length != args.max_new_tokens:
-        fname += f"-{max_model_length}"
+        run_name += f"-{max_model_length}"
     if not args.use_chat_template:
-        fname += "-nochat"
-    fpath = os.path.join(output_dir, folder, f"{fname}.json")
+        run_name += "-nochat"
+    
+    # Define the dedicated output directory for this specific run
+    run_output_dir = os.path.join(output_dir, model_folder_name, run_name)
+    fs.makedirs(run_output_dir, exist_ok=True)
+    
+    # Check if results already exist in this dedicated directory
+    fpath = os.path.join(run_output_dir, "summary.json")
     if fs.exists(fpath) and not args.overwrite:
         print(f"File {fpath} already exists. Skipping.")
         return
@@ -75,7 +82,7 @@ def main():
     env_config = EnvConfig()
 
     evaluation_tracker = EvaluationTracker(
-        output_dir=args.output_dir,
+        output_dir=run_output_dir,  # Now using the run-specific output directory
         save_details=True,
         push_to_hub=False,
         push_to_tensorboard=False,
@@ -153,7 +160,7 @@ def main():
     }
 
     print(json.dumps(data, indent=2))
-    fs.makedirs(os.path.join(output_dir, folder), exist_ok=True)
+    # Use the dedicated run directory for saving the summary
     with fs.open(fpath, "w") as f:
         f.write(json.dumps(data) + "\n")
 
