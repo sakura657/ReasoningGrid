@@ -1,0 +1,58 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# Jupyter/IPython notebooks checkpoints
+.ipynb_checkpoints/
+
+# PyTorch / HuggingFace / DeepSpeed artifacts
+*.pt
+*.bin
+*.ckpt
+*.onnx
+*.npz
+*.pb
+*.pkl
+
+# Hugging Face cache
+~/.cache/huggingface/
+.cache/
+datasets/
+output/
+runs/
+
+# VSCode settings
+.vscode/
+
+# MacOS system files
+.DS_Store
+
+# Logs
+*.log
+
+# Evaluation output
+*.jsonl
+*.out
+*.tmp
+*.eval
+
+# Compiled CUDA stuff
+*.cu.o
+*.cubin
+
+# Experiments and results
+output/
+
+# Shell history or secrets
+*.sh~
+*.swp
+*.bak
+.env.local
+secrets.json

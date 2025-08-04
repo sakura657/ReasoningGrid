@@ -23,7 +23,7 @@ def parse_args():
         help="Directory to save the output files",
     )
     parser.add_argument(
-        "--model", type=str, default="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+        "--model", type=str, default="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
     )
     parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--top_p", type=float, default=0.9)
@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max_new_tokens", type=int, default=32768)
     parser.add_argument("--max_model_length", type=int, default=None)
-    parser.add_argument("--gpu_memory_utilization", type=float, default=0.9)
+    parser.add_argument("--gpu_memory_utilization", type=float, default=0.98)
     parser.add_argument("--dtype", type=str, default="bfloat16")
     parser.add_argument("--system_prompt", type=str, default=None)
     parser.add_argument("--custom_tasks_directory", type=str, default=None)
@@ -57,7 +57,7 @@ def main():
         max_model_length = None
 
     folder = args.model.replace("/", "_")
-    fname = f"{args.seed}-{args.temperature}-{args.top_p}-{args.task.split('|')[1]}-{args.max_new_tokens}"
+    fname = f"{args.seed}-{args.temperature}-{args.top_p}-{args.dtype}-{args.task.split('|')[1]}-{args.max_new_tokens}"
     if max_model_length != args.max_new_tokens:
         fname += f"-{max_model_length}"
     if not args.use_chat_template:
