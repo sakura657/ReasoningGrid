@@ -49,6 +49,8 @@ runs/
 
 # Experiments and results
 output/
+example/
+example_parquet_to_csv.py
 
 # Shell history or secrets
 *.sh~

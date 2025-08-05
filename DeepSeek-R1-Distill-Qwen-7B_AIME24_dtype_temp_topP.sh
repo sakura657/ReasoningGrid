@@ -34,6 +34,12 @@ MODEL_FOLDER_NAME=$(echo "$MODEL" | tr '/' '_')
 RUN_NAME="${SEED}-${TEMP}-${TOP_P}-${DTYPE}-aime24-${MAX_TOKENS}"
 RUN_OUTPUT_DIR="$OUTPUT_DIR/$MODEL_FOLDER_NAME/$RUN_NAME"
 
+# Skip if this run already exists (based on folder existence)
+if [ -d "$RUN_OUTPUT_DIR" ]; then
+  echo "Skipping existing run: $RUN_NAME"
+  continue
+fi
+
 mkdir -p "$RUN_OUTPUT_DIR"
 
 LOG_FILE="$RUN_OUTPUT_DIR/run.log"

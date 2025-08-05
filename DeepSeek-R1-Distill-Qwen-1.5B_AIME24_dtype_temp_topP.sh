@@ -16,7 +16,8 @@ TEMPS=(0.0 0.2 0.4 0.6 0.8 1.0)
 SEEDS=(0 1 2 3 4 42 100 123 2023 777)
 
 # Numerical precisions
-DTYPES=("bfloat16" "float16" "float32")
+# DTYPES=("bfloat16" "float16" "float32")
+DTYPES=("bfloat16" "float16")
 
 MAX_MODEL_LENGTH=32768
 MAX_TOKENS=32768
@@ -33,6 +34,12 @@ MODEL_FOLDER_NAME=$(echo "$MODEL" | tr '/' '_')
 # Pay Attention to the hardcoded output directory structure (dataset)
 RUN_NAME="${SEED}-${TEMP}-${TOP_P}-${DTYPE}-aime24-${MAX_TOKENS}"
 RUN_OUTPUT_DIR="$OUTPUT_DIR/$MODEL_FOLDER_NAME/$RUN_NAME"
+
+# Skip if this run already exists (based on folder existence)
+if [ -d "$RUN_OUTPUT_DIR" ]; then
+  echo "Skipping existing run: $RUN_NAME"
+  continue
+fi
 
 mkdir -p "$RUN_OUTPUT_DIR"
 
