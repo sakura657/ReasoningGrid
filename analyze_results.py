@@ -41,16 +41,16 @@ def load_tokenizer():
         logging.error(f"Failed to load tokenizer: {e}")
         return None
 
-def calculate_average_token_length(details_path, tokenizer):
+def calculate_total_token_length(details_path, tokenizer):
     """
-    Calculate the average token length of responses in parquet files.
+    Calculate the total token length of responses in parquet files.
     
     Args:
         details_path (str): Path to the details directory containing parquet files.
         tokenizer: The HuggingFace tokenizer to use.
         
     Returns:
-        dict: Dictionary with average token length and stderr, or None if processing fails.
+        dict: Dictionary with total token length and number of samples, or None if processing fails.
     """
     # Check if the directory exists
     if not os.path.exists(details_path) or not os.path.isdir(details_path):
@@ -64,8 +64,9 @@ def calculate_average_token_length(details_path, tokenizer):
         logging.warning(f"No parquet files found in {details_path}")
         return None
     
-    # Store individual token lengths to calculate standard error
-    token_lengths = []
+    # Calculate the total token length across all responses
+    total_token_length = 0
+    num_samples = 0
     
     for file_path in parquet_files:
         try:
@@ -85,31 +86,23 @@ def calculate_average_token_length(details_path, tokenizer):
             else:
                 response_column = RESPONSE_COLUMN
             
-            # Calculate token length for each response
+            # Calculate token length for each response and add to total
             for _, row in df.iterrows():
                 response = str(row.get(response_column, ""))
                 tokens = tokenizer.encode(response, add_special_tokens=False)
-                token_lengths.append(len(tokens))
+                total_token_length += len(tokens)
+                num_samples += 1
             
-            logging.info(f"Processed {file_path}: {len(token_lengths)} responses")
+            logging.info(f"Processed {file_path}: added {num_samples} responses")
             
         except Exception as e:
             logging.error(f"Error processing file {file_path}: {e}")
             continue
     
-    if token_lengths:
-        import numpy as np
-        avg_token_length = np.mean(token_lengths)
-        # Calculate standard error (standard deviation divided by sqrt of sample size)
-        if len(token_lengths) > 1:
-            token_stderr = np.std(token_lengths, ddof=1) / np.sqrt(len(token_lengths))
-        else:
-            token_stderr = 0.0
-            
+    if num_samples > 0:
         return {
-            "avg_token_length": float(avg_token_length),
-            "token_length_stderr": float(token_stderr),
-            "num_samples": len(token_lengths)
+            "total_token_length": int(total_token_length),
+            "num_samples": num_samples
         }
     else:
         logging.warning("No valid responses found to calculate token length")
@@ -214,9 +207,9 @@ def process_experiment(exp_path, tokenizer):
     results_path = os.path.join(exp_path, "results")
     accuracy_data = extract_accuracy_from_results(results_path)
     
-    # Calculate average token length
+    # Calculate total token length
     details_path = os.path.join(exp_path, "details")
-    token_length_data = calculate_average_token_length(details_path, tokenizer)
+    token_length_data = calculate_total_token_length(details_path, tokenizer)
     
     # Compile results
     results = {
@@ -233,11 +226,9 @@ def process_experiment(exp_path, tokenizer):
     
     if accuracy_data:
         results["results"]["accuracy"] = accuracy_data["accuracy"]
-        results["results"]["accuracy_stderr"] = accuracy_data["stderr"]
     
     if token_length_data is not None:
-        results["results"]["avg_token_length"] = token_length_data["avg_token_length"]
-        results["results"]["token_length_stderr"] = token_length_data["token_length_stderr"]
+        results["results"]["total_token_length"] = token_length_data["total_token_length"]
         results["results"]["num_samples"] = token_length_data["num_samples"]
     
     # Save results to file

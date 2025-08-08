@@ -36,54 +36,20 @@ def load_results(file_path):
         logging.error(f"Error loading results from {file_path}: {e}")
         return None
 
-def compute_weighted_average(values, weights=None):
+def compute_mean_and_std(values):
     """
-    Compute weighted average of values with optional weights.
+    Compute mean and standard deviation of values.
     
     Args:
-        values (list): List of values to average.
-        weights (list, optional): List of weights. If None, equal weights are used.
+        values (list): List of values to analyze.
         
     Returns:
-        float: The weighted average.
+        tuple: (mean, std_dev)
     """
-    if weights is None:
-        return np.mean(values)
-    return np.average(values, weights=weights)
-
-def compute_weighted_std_error(values, weights=None):
-    """
-    Compute weighted standard error of the mean.
-    
-    Args:
-        values (list): List of values.
-        weights (list, optional): List of weights. If None, equal weights are used.
-        
-    Returns:
-        float: The weighted standard error.
-    """
-    if len(values) <= 1:
-        return 0.0
-        
-    if weights is None:
-        # Standard error of the mean = standard deviation / sqrt(n)
-        return np.std(values, ddof=1) / np.sqrt(len(values))
-    
-    # For weighted calculations
-    weights = np.array(weights)
-    values = np.array(values)
-    
-    # Effective sample size for weighted data
-    n_eff = np.sum(weights) ** 2 / np.sum(weights ** 2)
-    
-    # Weighted mean
-    weighted_mean = np.sum(weights * values) / np.sum(weights)
-    
-    # Weighted variance
-    weighted_var = np.sum(weights * ((values - weighted_mean) ** 2)) / np.sum(weights)
-    
-    # Weighted standard error
-    return np.sqrt(weighted_var / n_eff)
+    import numpy as np
+    mean = np.mean(values)
+    std_dev = np.std(values, ddof=1) if len(values) > 1 else 0.0
+    return mean, std_dev
 
 def analyze_by_seed(data):
     """
@@ -116,42 +82,40 @@ def analyze_by_seed(data):
             
         # Calculate average results for this seed
         accuracy_values = []
-        accuracy_stderr_values = []
         token_length_values = []
-        token_length_stderr_values = []
+        sample_counts = []
         
         for exp in seed_experiments:
             try:
                 accuracy_values.append(exp["results"]["accuracy"])
-                accuracy_stderr_values.append(exp["results"]["accuracy_stderr"])
-                token_length_values.append(exp["results"]["avg_token_length"])
-                token_length_stderr_values.append(exp["results"]["token_length_stderr"])
+                token_length_values.append(exp["results"]["total_token_length"])
+                sample_counts.append(exp["results"]["num_samples"])
             except KeyError as e:
                 logging.warning(f"Missing key in experiment: {e}")
                 continue
                 
-        # Calculate averages
+        # Calculate means and standard deviations
         avg_accuracy = np.mean(accuracy_values)
-        avg_accuracy_stderr = compute_weighted_std_error(accuracy_values)
+        std_accuracy = np.std(accuracy_values, ddof=1) if len(accuracy_values) > 1 else 0.0
         avg_token_length = np.mean(token_length_values)
-        avg_token_length_stderr = compute_weighted_std_error(token_length_values)
+        std_token_length = np.std(token_length_values, ddof=1) if len(token_length_values) > 1 else 0.0
         
         # Store results
         seed_results[str(seed)] = {
             "seed": seed,
             "results": {
                 "accuracy": avg_accuracy,
-                "accuracy_stderr": avg_accuracy_stderr,
-                "avg_token_length": avg_token_length,
-                "token_length_stderr": avg_token_length_stderr,
+                "accuracy_std_dev": std_accuracy,
+                "total_token_length": avg_token_length,
+                "token_length_std_dev": std_token_length,
                 "num_experiments": len(seed_experiments),
-                "num_samples": seed_experiments[0]["results"].get("num_samples", 30)  # Assuming all have same sample count
+                "avg_samples": np.mean(sample_counts) if sample_counts else 0
             }
         }
         
         logging.info(f"Seed {seed}: Processed {len(seed_experiments)} experiments, " 
                     f"avg accuracy: {avg_accuracy:.4f}, "
-                    f"avg token length: {avg_token_length:.2f}")
+                    f"avg total token length: {avg_token_length:.2f}")
     
     return seed_results
 
@@ -198,29 +162,23 @@ def analyze_by_config(data):
         
         # Extract metrics from all experiments with this configuration
         accuracy_values = []
-        accuracy_stderr_values = []
         token_length_values = []
-        token_length_stderr_values = []
+        sample_counts = []
         
         for exp in experiments:
             try:
                 accuracy_values.append(exp["results"]["accuracy"])
-                accuracy_stderr_values.append(exp["results"]["accuracy_stderr"])
-                token_length_values.append(exp["results"]["avg_token_length"])
-                token_length_stderr_values.append(exp["results"]["token_length_stderr"])
+                token_length_values.append(exp["results"]["total_token_length"])
+                sample_counts.append(exp["results"]["num_samples"])
             except KeyError as e:
                 logging.warning(f"Missing key in experiment: {e}")
                 continue
         
-        # Calculate weighted averages
-        # Use inverse of stderr as weights (higher precision = higher weight)
-        accuracy_weights = [1 / (stderr if stderr > 0 else 1e-10) for stderr in accuracy_stderr_values]
-        token_weights = [1 / (stderr if stderr > 0 else 1e-10) for stderr in token_length_stderr_values]
-        
-        avg_accuracy = compute_weighted_average(accuracy_values, accuracy_weights)
-        avg_accuracy_stderr = compute_weighted_std_error(accuracy_values, accuracy_weights)
-        avg_token_length = compute_weighted_average(token_length_values, token_weights)
-        avg_token_length_stderr = compute_weighted_std_error(token_length_values, token_weights)
+        # Calculate means and standard deviations
+        avg_accuracy = np.mean(accuracy_values)
+        std_accuracy = np.std(accuracy_values, ddof=1) if len(accuracy_values) > 1 else 0.0
+        avg_token_length = np.mean(token_length_values)
+        std_token_length = np.std(token_length_values, ddof=1) if len(token_length_values) > 1 else 0.0
         
         # Store results
         config_results[config_key] = {
@@ -231,18 +189,18 @@ def analyze_by_config(data):
             },
             "results": {
                 "accuracy": avg_accuracy,
-                "accuracy_stderr": avg_accuracy_stderr,
-                "avg_token_length": avg_token_length,
-                "token_length_stderr": avg_token_length_stderr,
+                "accuracy_std_dev": std_accuracy,
+                "total_token_length": avg_token_length,
+                "token_length_std_dev": std_token_length,
                 "num_experiments": len(experiments),
-                "num_samples": experiments[0]["results"].get("num_samples", 30)  # Assuming all have same sample count
+                "avg_samples": np.mean(sample_counts) if sample_counts else 0
             }
         }
         
         logging.info(f"Config temp={temp}, top_p={top_p}, dtype={dtype}: "
                     f"Processed {len(experiments)} experiments, "
                     f"avg accuracy: {avg_accuracy:.4f}, "
-                    f"avg token length: {avg_token_length:.2f}")
+                    f"avg total token length: {avg_token_length:.2f}")
     
     return config_results
 
@@ -275,7 +233,7 @@ def find_best_configurations(config_results):
     # Find best accuracy and token efficiency
     for config_key, data in config_results.items():
         accuracy = data["results"]["accuracy"]
-        token_length = data["results"]["avg_token_length"]
+        token_length = data["results"]["total_token_length"]
         
         # Best accuracy
         if accuracy > best_configs["best_accuracy"]["value"]:
@@ -345,10 +303,11 @@ def main():
             {
                 "seed": int(seed),
                 "accuracy": data["results"]["accuracy"],
-                "accuracy_stderr": data["results"]["accuracy_stderr"],
-                "avg_token_length": data["results"]["avg_token_length"],
-                "token_length_stderr": data["results"]["token_length_stderr"],
-                "num_experiments": data["results"]["num_experiments"]
+                "accuracy_std_dev": data["results"]["accuracy_std_dev"],
+                "total_token_length": data["results"]["total_token_length"],
+                "token_length_std_dev": data["results"]["token_length_std_dev"],
+                "num_experiments": data["results"]["num_experiments"],
+                "avg_samples": data["results"]["avg_samples"]
             }
             for seed, data in seed_results.items()
         ])
@@ -364,10 +323,11 @@ def main():
                 "top_p": data["configuration"]["top_p"],
                 "dtype": data["configuration"]["dtype"],
                 "accuracy": data["results"]["accuracy"],
-                "accuracy_stderr": data["results"]["accuracy_stderr"],
-                "avg_token_length": data["results"]["avg_token_length"],
-                "token_length_stderr": data["results"]["token_length_stderr"],
-                "num_experiments": data["results"]["num_experiments"]
+                "accuracy_std_dev": data["results"]["accuracy_std_dev"],
+                "total_token_length": data["results"]["total_token_length"],
+                "token_length_std_dev": data["results"]["token_length_std_dev"],
+                "num_experiments": data["results"]["num_experiments"],
+                "avg_samples": data["results"]["avg_samples"]
             }
             for config, data in config_results.items()
         ])

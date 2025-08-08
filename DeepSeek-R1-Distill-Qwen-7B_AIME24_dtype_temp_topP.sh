@@ -1,4 +1,5 @@
 #!/bin/bash
+trap "echo 'Killing all child processes...'; kill 0" SIGINT SIGTERM EXIT
 
 # ==== Docker-Compatible Configuration ====
 LOCAL_DIR="/app"

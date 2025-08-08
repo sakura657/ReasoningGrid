@@ -51,6 +51,7 @@ runs/
 output/
 example/
 example_parquet_to_csv.py
+rm.py
 
 # Shell history or secrets
 *.sh~
