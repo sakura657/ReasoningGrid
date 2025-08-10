@@ -40,6 +40,8 @@ def parse_args():
     parser.add_argument("--use_chat_template", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--launcher_type", type=str, default="VLLM")
+    parser.add_argument("--swap_space", type=int, default=4)
+    parser.add_argument("--cpu_offload_gb", type=float, default=0)
     return parser.parse_args()
 
 
@@ -111,6 +113,8 @@ def main():
         use_chat_template=args.use_chat_template,
         max_model_length=max_model_length,
         gpu_memory_utilization=args.gpu_memory_utilization,
+        cpu_offload_gb=args.cpu_offload_gb,
+        swap_space=args.swap_space,
         generation_parameters=GenerationParameters(
             max_new_tokens=args.max_new_tokens,
             seed=args.seed,
