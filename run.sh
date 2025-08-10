@@ -129,7 +129,8 @@ for TASK in "\${TASKS[@]}"; do
         --custom_tasks_directory lighteval_tasks.py \
         --use_chat_template \
         --dtype $DTYPE \
-        --swap_space 16 
+        --swap_space 4 \
+        --cpu_offload_gb 20
 done
 done
 EOT
