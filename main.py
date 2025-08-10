@@ -42,6 +42,10 @@ def parse_args():
     parser.add_argument("--launcher_type", type=str, default="VLLM")
     parser.add_argument("--swap_space", type=int, default=4)
     parser.add_argument("--cpu_offload_gb", type=float, default=0)
+    # parser.add_argument("--max_num_seqs", type=int, default=128)
+    # parser.add_argument("max_num_batched_tokens", type=int, default=32768)
+
+
     return parser.parse_args()
 
 
@@ -115,6 +119,8 @@ def main():
         gpu_memory_utilization=args.gpu_memory_utilization,
         cpu_offload_gb=args.cpu_offload_gb,
         swap_space=args.swap_space,
+        # max_num_seqs=args.max_new_tokens,
+        # max_num_batched_tokens=args.max_new_tokens,
         generation_parameters=GenerationParameters(
             max_new_tokens=args.max_new_tokens,
             seed=args.seed,
