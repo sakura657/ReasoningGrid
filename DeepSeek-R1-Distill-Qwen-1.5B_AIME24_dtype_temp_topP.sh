@@ -3,8 +3,8 @@ trap "echo 'Killing all child processes...'; kill 0" SIGINT SIGTERM EXIT
 # to stop: sudo pkill -9 -f "DeepSeek-R1-Distill-Qwen-1.5B"
 
 # ==== Docker-Compatible Configuration ====
-LOCAL_DIR="/app"
-OUTPUT_DIR="/app/output"
+LOCAL_DIR="/workspace"
+OUTPUT_DIR="/workspace/output"
 
 # ==== Experiment Grid ====
 MODEL="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"

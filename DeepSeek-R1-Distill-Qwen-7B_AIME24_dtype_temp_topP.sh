@@ -2,8 +2,8 @@
 trap "echo 'Killing all child processes...'; kill 0" SIGINT SIGTERM EXIT
 
 # ==== Docker-Compatible Configuration ====
-LOCAL_DIR="/app"
-OUTPUT_DIR="/app/output"
+LOCAL_DIR="/workspace"
+OUTPUT_DIR="/workspace/output"
 
 # ==== Experiment Grid ====
 MODEL="deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
