@@ -3,7 +3,6 @@
 # source ~/.bashrc
 LOCAL_DIR="/projects/bdrx/azhang14/ReasoningGrid/dev"
 OUTPUT_DIR="/projects/bdrx/azhang14/ReasoningGrid/test"
-mkdir -p $OUTPUT_DIR/logs
 
 module load cuda/12.6
 conda init
