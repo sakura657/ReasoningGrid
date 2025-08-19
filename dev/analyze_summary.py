@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # DEFAULT_OUTPUT_PATH = "/projects/bdrx/azhang14/ReasoningGrid/outputs/ablation/dpsk_distill_1.5B_7B_sober_codv5/avg16/deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B/analysis_results.json"
 
 # List of seed values to analyze0, 1, 2, 3, 4, 42, 100, 123, 666, 2023
-SEEDS = [0, 1, 2, 3, 4, 42, 100, 110, 123, 666, 888, 911, 999, 666, 1000, 2023]
+SEEDS = [0, 1, 2, 3, 4, 42, 100, 110, 123, 666, 888, 911, 999, 1000, 2023, 2025]
 
 def load_results(file_path):
     """
