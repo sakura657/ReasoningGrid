@@ -17,6 +17,10 @@ python -c "import torch; print(torch.cuda.is_available())"
 python -c "import torch; print(torch.cuda.device_count())"
 nvidia-smi topo -m
 
+# Set path for prompts file and load SYSTEM_PROMPT
+export PROMPTS_PATH="$LOCAL_DIR/prompts.json"
+SYSTEM_PROMPT=$(python -c "import json; print(json.load(open('$PROMPTS_PATH'))['SYSTEM_PROMPT'])")
+
 MODELS=(
     # /projects/bdrx/azhang14/s1/ckpts/DeepSeek-R1-Distill-Qwen-1.5B_s1K-1.1-tokenized-v1-original_bs4_lr2e-5_epoch5_wd1e-4_20250803-195539/checkpoint-1250
     # deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
@@ -88,20 +92,20 @@ set -x
 SEEDS=(
     0
     1
-    2
-    3
-    4 
-    42 
-    100
-    110
-    123
-    666
-    888
-    911
-    999
-    1000
-    2023
-    2025 
+    # 2
+    # 3
+    # 4 
+    # 42 
+    # 100
+    # 110
+    # 123
+    # 666
+    # 888
+    # 911
+    # 999
+    # 1000
+    # 2023
+    # 2025 
 )
 
 TASKS=(
@@ -125,6 +129,7 @@ for TASK in "${TASKS[@]}"; do
         --max_new_tokens $MAX_TOKENS \
         --max_model_length $MAX_MODEL_LENGTH \
         --custom_tasks_directory lighteval_tasks.py \
+        --system_prompt "$SYSTEM_PROMPT" \
         --use_chat_template \
         --dtype $DTYPE \
         --max_num_seqs $MAX_NUM_SEQUENCES \

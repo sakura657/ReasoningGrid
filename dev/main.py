@@ -81,11 +81,6 @@ def main():
         print(f"File {fpath} already exists. Skipping.")
         return
 
-    # cot_prompt = None
-    # if args.cot_prompt is not None and os.path.exists(args.cot_prompt):
-    #     with open(args.cot_prompt, "r") as f:
-    #         cot_prompt = f.read()
-
     evaluation_tracker = EvaluationTracker(
         output_dir=run_output_dir,  # Now using the run-specific output directory
         save_details=True,
@@ -138,7 +133,6 @@ def main():
 
     pipeline.evaluate()
     pipeline.show_results()
-    results = pipeline.get_results()
     pipeline.save_and_push_results()
 
 
