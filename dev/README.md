@@ -1,6 +1,6 @@
-# Language Model Evaluation Automation Suite
+# Reasoning Model Evaluation Automation Suite
 
-This document describes an automated suite for running language model evaluations using `lighteval`, analyzing the results, and generating comprehensive reports.
+This document describes an automated suite for running reasoning model evaluations using `lighteval`, analyzing the results, and generating comprehensive reports.
 
 ## File Descriptions
 
@@ -12,7 +12,7 @@ This document describes an automated suite for running language model evaluation
 - **`analyze_summary.py`**: The second-pass analysis script. It takes the aggregated results from the previous step and performs detailed statistical analysis, grouping data by seed and configuration. It calculates means, standard deviations, and other metrics, outputting a final `analysis_results.json` and two summary CSV files (`seed_analysis.csv` and `config_analysis.csv`).
 - **`convert_parquet_to_csv.py`**: A utility script that finds all `.parquet` files in the output directory and converts them to `.csv` format.
 
-## `main.py` Parameters
+## Main Parameters
 
 The `run_interactive.sh` script calls `main.py` with the following key parameters to control the evaluation process:
 
@@ -48,6 +48,11 @@ All configurations are done within the `run_interactive.sh` script. Open it and 
   - `SEEDS`: An array of random seeds to run for each configuration, enabling statistical analysis of result variance.
   - `TASKS`: An array defining the custom tasks to run.
 
+  **Prompts(prompts.json)**:
+  - `SYSTEM_PROMPT`: Set this for system prompt.
+  - `MATH_QUERY_TEMPLATE`: Set the user prompt here.
+
+
 ### 2. Execution
 
 Once configured, run the script from your terminal:
@@ -55,8 +60,6 @@ Once configured, run the script from your terminal:
 ```bash
 bash run_interactive.sh
 ```
-
-The script will execute all evaluation runs and then proceed with the analysis automatically.
 
 ## Output Structure
 
