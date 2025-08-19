@@ -15,7 +15,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # DEFAULT_OUTPUT_PATH = "/projects/bdrx/azhang14/ReasoningGrid/outputs/ablation/dpsk_distill_1.5B_7B_sober_codv5/avg16/deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B/analysis_results.json"
 
 # List of seed values to analyze0, 1, 2, 3, 4, 42, 100, 123, 666, 2023
-SEEDS = [0, 1, 2, 3, 4, 42, 100, 110, 123, 666, 888, 911, 999, 1000, 2023, 2025]
+SEEDS = [0, 1, 2,
+    3,
+    4, 
+    42,
+    100, 
+    110,
+    123,
+    666,
+    888,
+    911,
+    999,
+    666,
+    1000,
+    2023]
 
 def load_results(file_path):
     """
@@ -100,6 +113,15 @@ def analyze_by_seed(data):
         avg_token_length = np.mean(token_length_values)
         std_token_length = np.std(token_length_values, ddof=1) if len(token_length_values) > 1 else 0.0
         
+        # Calculate new metrics
+        total_tokens_for_seed = np.sum(token_length_values)
+        total_samples_for_seed = np.sum(sample_counts)
+        avg_token_length_per_sample = (
+            total_tokens_for_seed / total_samples_for_seed
+            if total_samples_for_seed > 0
+            else 0
+        )
+
         # Store results
         seed_results[str(seed)] = {
             "seed": seed,
@@ -108,6 +130,7 @@ def analyze_by_seed(data):
                 "accuracy_std_dev": std_accuracy,
                 "total_token_length": avg_token_length,
                 "token_length_std_dev": std_token_length,
+                "avg_token_length_per_sample": avg_token_length_per_sample,
                 "num_experiments": len(seed_experiments),
                 "avg_samples": np.mean(sample_counts) if sample_counts else 0
             }
@@ -166,14 +189,23 @@ def analyze_by_config(data):
         
         # Extract metrics from all experiments with this configuration
         accuracy_values = []
-        token_length_values = []
+        total_token_length_values = []
+        avg_token_length_per_sample_values = []
         sample_counts = []
         
         for exp in experiments:
             try:
                 accuracy_values.append(exp["results"]["accuracy"])
-                token_length_values.append(exp["results"]["total_token_length"])
-                sample_counts.append(exp["results"]["num_samples"])
+                total_token_length_values.append(exp["results"]["total_token_length"])
+                
+                # Calculate avg token length per sample for each experiment (seed)
+                total_tokens = exp["results"]["total_token_length"]
+                num_samples = exp["results"]["num_samples"]
+                if num_samples > 0:
+                    avg_len_per_sample = total_tokens / num_samples
+                    avg_token_length_per_sample_values.append(avg_len_per_sample)
+                
+                sample_counts.append(num_samples)
             except KeyError as e:
                 logging.warning(f"Missing key in experiment: {e}")
                 continue
@@ -181,8 +213,12 @@ def analyze_by_config(data):
         # Calculate means and standard deviations
         avg_accuracy = np.mean(accuracy_values)
         std_accuracy = np.std(accuracy_values, ddof=1) if len(accuracy_values) > 1 else 0.0
-        avg_token_length = np.mean(token_length_values)
-        std_token_length = np.std(token_length_values, ddof=1) if len(token_length_values) > 1 else 0.0
+        avg_total_token_length = np.mean(total_token_length_values)
+        std_total_token_length = np.std(total_token_length_values, ddof=1) if len(total_token_length_values) > 1 else 0.0
+        
+        # Calculate mean and std for average token length per sample (across seeds)
+        avg_token_length_per_sample = np.mean(avg_token_length_per_sample_values)
+        std_token_length_per_sample = np.std(avg_token_length_per_sample_values, ddof=1) if len(avg_token_length_per_sample_values) > 1 else 0.0
         
         # Store results
         config_results[config_key] = {
@@ -196,8 +232,10 @@ def analyze_by_config(data):
             "results": {
                 "accuracy": avg_accuracy,
                 "accuracy_std_dev": std_accuracy,
-                "total_token_length": avg_token_length,
-                "token_length_std_dev": std_token_length,
+                "total_token_length": avg_total_token_length,
+                "total_token_length_std": std_total_token_length,
+                "avg_token_length_per_sample": avg_token_length_per_sample,
+                "avg_token_length_per_sample_std": std_token_length_per_sample,
                 "num_experiments": len(experiments),
                 "avg_samples": np.mean(sample_counts) if sample_counts else 0
             }
@@ -206,7 +244,7 @@ def analyze_by_config(data):
         logging.info(f"Config temp={temp}, top_p={top_p}, dtype={dtype}: "
                     f"Processed {len(experiments)} experiments, "
                     f"avg accuracy: {avg_accuracy:.4f}, "
-                    f"avg total token length: {avg_token_length:.2f}")
+                    f"avg total token length: {avg_total_token_length:.2f}")
     
     return config_results
 
@@ -312,6 +350,7 @@ def main():
                 "accuracy_std_dev": data["results"]["accuracy_std_dev"],
                 "total_token_length": data["results"]["total_token_length"],
                 "token_length_std_dev": data["results"]["token_length_std_dev"],
+                "avg_token_length_per_sample": data["results"]["avg_token_length_per_sample"],
                 "num_experiments": data["results"]["num_experiments"],
                 "avg_samples": data["results"]["avg_samples"]
             }
@@ -333,7 +372,9 @@ def main():
                 "accuracy": data["results"]["accuracy"],
                 "accuracy_std_dev": data["results"]["accuracy_std_dev"],
                 "total_token_length": data["results"]["total_token_length"],
-                "token_length_std_dev": data["results"]["token_length_std_dev"],
+                "total_token_length_std": data["results"]["total_token_length_std"],
+                "avg_token_length_per_sample": data["results"]["avg_token_length_per_sample"],
+                "avg_token_length_per_sample_std": data["results"]["avg_token_length_per_sample_std"],
                 "num_experiments": data["results"]["num_experiments"],
                 "avg_samples": data["results"]["avg_samples"]
             }

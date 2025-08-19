@@ -2,14 +2,14 @@
 # conda init bash
 # source ~/.bashrc
 LOCAL_DIR="/projects/bdrx/azhang14/ReasoningGrid/dev"
-OUTPUT_DIR="/projects/bdrx/azhang14/ReasoningGrid/dev"
+OUTPUT_DIR="/projects/bdrx/azhang14/ReasoningGrid/test"
 mkdir -p $OUTPUT_DIR/logs
 
 module load cuda/12.6
 conda init
 source ~/.bashrc
 conda deactivate
-source /projects/bdrx/azhang14/env/reasoning_benchmark/bin/activate
+source /projects/bdrx/azhang14/env/test/bin/activate
 
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
@@ -92,7 +92,7 @@ set -x
 SEEDS=(
     0
     1
-    # 2
+    2
     # 3
     # 4 
     # 42 

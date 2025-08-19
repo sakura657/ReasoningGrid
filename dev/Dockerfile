@@ -3,7 +3,7 @@ FROM nvidia/cuda:12.6.3-py3.12.1
 # Set the working directory 
 WORKDIR /app 
 
-
+Run pip3 install --no-cache-dir --upgrade pip
 RUN pip3 install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu126 
 RUN pip3 install --no-cache-dir vllm==0.10.0 
 RUN pip3 install --no-cache-dir setuptools==79.0.1 
