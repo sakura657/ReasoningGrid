@@ -1,6 +1,4 @@
 #!/bin/bash
-# conda init bash
-# source ~/.bashrc
 LOCAL_DIR="/projects/bdrx/azhang14/ReasoningGrid/dev"
 OUTPUT_DIR="/projects/bdrx/azhang14/ReasoningGrid/test"
 
@@ -21,22 +19,13 @@ export PROMPTS_PATH="$LOCAL_DIR/prompts.json"
 SYSTEM_PROMPT=$(python -c "import json; print(json.load(open('$PROMPTS_PATH'))['SYSTEM_PROMPT'])")
 
 MODELS=(
-    # /projects/bdrx/azhang14/s1/ckpts/DeepSeek-R1-Distill-Qwen-1.5B_s1K-1.1-tokenized-v1-original_bs4_lr2e-5_epoch5_wd1e-4_20250803-195539/checkpoint-1250
-    # deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+    deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
     deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
-    # knoveleng/Open-RS3
-    # knoveleng/Open-RS2
-    # knoveleng/Open-RS1
-    # agentica-org/DeepScaleR-1.5B-Preview
-    # simplescaling/s1.1-7B
-    # open-thoughts/OpenThinker-7B
-    # Intelligent-Internet/II-Thought-1.5B-Preview
-    # sail/Qwen2.5-Math-1.5B-Oat-Zero
-    # simplescaling/s1.1-32B
-    # deepseek-ai/DeepSeek-R1-Distill-Qwen-32B
-    # open-thoughts/OpenThinker-32B
-    # GAIR/LIMO
-    # bespokelabs/Bespoke-Stratos-32B
+    deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
+    Qwen/Qwen3-1.7B
+    Qwen/Qwen3-4B
+    Qwen/Qwen3-8B
+    Qwen/Qwen3-14B
 )
 
 MAX_NUM_SEQUENCES=(8)
