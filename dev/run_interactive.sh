@@ -38,8 +38,8 @@ MAX_NUM_BATCHED_TOKENS=(65536)
 
 TOP_PS=(
     0.8 
-    0.9 
-    0.95 
+    # 0.9 
+    # 0.95 
     # 0.98 
     # 1.0
 )
@@ -168,5 +168,3 @@ ANALYSIS_OUTPUT_PATH="$OUTPUT_DIR/$MODEL_NAME_WITH_UNDERSCORE/analysis_results.j
 python $LOCAL_DIR/analyze_summary.py \
     --results-path "$RESULTS_PATH" \
     --output-path "$ANALYSIS_OUTPUT_PATH"
-
-echo "Summary analysis complete."
