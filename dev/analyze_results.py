@@ -8,17 +8,8 @@ from tqdm import tqdm
 import argparse
 
 # --- Configuration ---
-# Base directory containing experiment results
-# BASE_DIR = "/projects/bdrx/azhang14/ReasoningGrid/outputs/ablation/dpsk_distill_1.5B_7B_sober_codv5/avg16"
-
-# Model name pattern to process (can be modified to include other models)
-# MODEL_NAME_PATTERN = "deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B"
-
 # Output file name for the aggregated results
 OUTPUT_FILENAME = "analysis_results.json"
-
-# Tokenizer for calculating token lengths
-# TOKENIZER_NAME = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
 
 # Column name in the Parquet file for the response
 RESPONSE_COLUMN = "completion"
@@ -193,16 +184,18 @@ def process_experiment(exp_path, tokenizer):
     exp_name = os.path.basename(exp_path)
     config_parts = exp_name.split('-')
     
-    # Parse configuration parameters (seed, temperature, top_p, dtype)
+    # Parse configuration parameters (seed, temperature, top_p, dtype, etc.)
     try:
         seed = config_parts[0]
         temperature = config_parts[1]
         top_p = config_parts[2]
         dtype = config_parts[3]
-        batch_size = config_parts[4] 
-        dataset = config_parts[6]  # Join remaining parts as dataset name
+        max_num_seqs = config_parts[4] 
+        max_num_batched_tokens = config_parts[5]
+        dataset = config_parts[6]
+        max_model_length = config_parts[7]
     except IndexError:
-        seed, temperature, top_p, dtype, batch_size, dataset = "unknown", "unknown", "unknown", "unknown", "unknown"
+        seed, temperature, top_p, dtype, max_num_seqs, max_num_batched_tokens, dataset, max_model_length = ("unknown",) * 8
         logging.warning(f"Could not parse configuration from directory name: {exp_name}")
     
     # Extract accuracy from results
@@ -221,8 +214,10 @@ def process_experiment(exp_path, tokenizer):
             "temperature": temperature,
             "top_p": top_p,
             "dtype": dtype,
-            "batch_size": batch_size,
-            "dataset": dataset
+            "max_num_seqs": max_num_seqs,
+            "max_num_batched_tokens": max_num_batched_tokens,
+            "dataset": dataset,
+            "max_model_length": max_model_length
         },
         "results": {}
     }

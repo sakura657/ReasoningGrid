@@ -10,25 +10,8 @@ from collections import defaultdict
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Default paths
-# DEFAULT_RESULTS_PATH = "/projects/bdrx/azhang14/ReasoningGrid/outputs/ablation/dpsk_distill_1.5B_7B_sober_codv5/avg16/deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B/all_experiments_results.json"
-# DEFAULT_OUTPUT_PATH = "/projects/bdrx/azhang14/ReasoningGrid/outputs/ablation/dpsk_distill_1.5B_7B_sober_codv5/avg16/deepseek-ai_DeepSeek-R1-Distill-Qwen-1.5B/analysis_results.json"
-
 # List of seed values to analyze0, 1, 2, 3, 4, 42, 100, 123, 666, 2023
-SEEDS = [0, 1, 2,
-    3,
-    4, 
-    42,
-    100, 
-    110,
-    123,
-    666,
-    888,
-    911,
-    999,
-    666,
-    1000,
-    2023]
+SEEDS = [0, 1, 2, 3, 4, 42, 100, 110, 123, 666, 888, 911, 999, 1000, 2025, 2026]
 
 def load_results(file_path):
     """
@@ -164,11 +147,16 @@ def analyze_by_config(data):
             temp = exp_data["configuration"]["temperature"]
             top_p = exp_data["configuration"]["top_p"]
             dtype = exp_data["configuration"]["dtype"]
-            batch_size = exp_data["configuration"]["batch_size"]
+            max_num_seqs = exp_data["configuration"]["max_num_seqs"]
+            max_num_batched_tokens = exp_data["configuration"]["max_num_batched_tokens"]
             dataset = exp_data["configuration"]["dataset"]
+            max_model_length = exp_data["configuration"]["max_model_length"]
             
             # Create a configuration key
-            config_key = f"temp_{temp}_topp_{top_p}_dtype_{dtype}_batch_{batch_size}_dataset_{dataset}"
+            config_key = (
+                f"temp_{temp}_topp_{top_p}_dtype_{dtype}_seqs_{max_num_seqs}_"
+                f"tokens_{max_num_batched_tokens}_dataset_{dataset}_len_{max_model_length}"
+            )
             
             config_experiments[config_key].append(exp_data)
         except KeyError:
@@ -184,8 +172,10 @@ def analyze_by_config(data):
         temp = first_exp["configuration"]["temperature"]
         top_p = first_exp["configuration"]["top_p"]
         dtype = first_exp["configuration"]["dtype"]
-        batch_size = first_exp["configuration"]["batch_size"]
+        max_num_seqs = first_exp["configuration"]["max_num_seqs"]
+        max_num_batched_tokens = first_exp["configuration"]["max_num_batched_tokens"]
         dataset = first_exp["configuration"]["dataset"]
+        max_model_length = first_exp["configuration"]["max_model_length"]
         
         # Extract metrics from all experiments with this configuration
         accuracy_values = []
@@ -226,8 +216,10 @@ def analyze_by_config(data):
                 "temperature": temp,
                 "top_p": top_p,
                 "dtype": dtype,
-                "batch_size": batch_size,
-                "dataset": dataset
+                "max_num_seqs": max_num_seqs,
+                "max_num_batched_tokens": max_num_batched_tokens,
+                "dataset": dataset,
+                "max_model_length": max_model_length
             },
             "results": {
                 "accuracy": avg_accuracy,
@@ -247,59 +239,6 @@ def analyze_by_config(data):
                     f"avg total token length: {avg_total_token_length:.2f}")
     
     return config_results
-
-def find_best_configurations(config_results):
-    """
-    Find the best configurations based on accuracy.
-    
-    Args:
-        config_results (dict): Results grouped by configuration.
-        
-    Returns:
-        dict: Dictionary containing the best configurations.
-    """
-    best_configs = {
-        "best_accuracy": {
-            "config": None,
-            "value": 0
-        },
-        "best_token_efficiency": {
-            "config": None,
-            "value": float('inf')
-        },
-        "best_combined": {
-            "config": None,
-            "accuracy": 0,
-            "token_length": float('inf')
-        }
-    }
-    
-    # Find best accuracy and token efficiency
-    for config_key, data in config_results.items():
-        accuracy = data["results"]["accuracy"]
-        token_length = data["results"]["total_token_length"]
-        
-        # Best accuracy
-        if accuracy > best_configs["best_accuracy"]["value"]:
-            best_configs["best_accuracy"]["value"] = accuracy
-            best_configs["best_accuracy"]["config"] = config_key
-            
-        # Best token efficiency (lowest length)
-        if token_length < best_configs["best_token_efficiency"]["value"]:
-            best_configs["best_token_efficiency"]["value"] = token_length
-            best_configs["best_token_efficiency"]["config"] = config_key
-            
-        # Best combined (highest accuracy with reasonable token length)
-        # We can define this as configurations with accuracy within 90% of best accuracy
-        # and token length not more than 20% above minimum
-        if accuracy > 0.9 * best_configs["best_accuracy"]["value"] and \
-           (best_configs["best_combined"]["config"] is None or \
-            accuracy > best_configs["best_combined"]["accuracy"]):
-            best_configs["best_combined"]["accuracy"] = accuracy
-            best_configs["best_combined"]["token_length"] = token_length
-            best_configs["best_combined"]["config"] = config_key
-    
-    return best_configs
 
 def main():
     parser = argparse.ArgumentParser(description='Analyze LLM experiment results')
@@ -323,14 +262,10 @@ def main():
     # Analyze by configuration
     config_results = analyze_by_config(data)
     
-    # Find best configurations
-    best_configs = find_best_configurations(config_results)
-    
     # Compile final results
     final_results = {
         "seed_analysis": seed_results,
         "configuration_analysis": config_results,
-        "best_configurations": best_configs
     }
     
     # Save results
@@ -342,33 +277,16 @@ def main():
             json.dump(final_results, f, indent=2)
         logging.info(f"Successfully saved analysis results to {args.output_path}")
         
-        # Also save a more readable CSV for seed analysis
-        seed_df = pd.DataFrame([
-            {
-                "seed": int(seed),
-                "accuracy": data["results"]["accuracy"],
-                "accuracy_std_dev": data["results"]["accuracy_std_dev"],
-                "total_token_length": data["results"]["total_token_length"],
-                "token_length_std_dev": data["results"]["token_length_std_dev"],
-                "avg_token_length_per_sample": data["results"]["avg_token_length_per_sample"],
-                "num_experiments": data["results"]["num_experiments"],
-                "avg_samples": data["results"]["avg_samples"]
-            }
-            for seed, data in seed_results.items()
-        ])
-        
-        csv_path = os.path.join(os.path.dirname(args.output_path), "seed_analysis.csv")
-        seed_df.to_csv(csv_path, index=False)
-        logging.info(f"Saved seed analysis CSV to {csv_path}")
-        
         # Also save a more readable CSV for configuration analysis
         config_df = pd.DataFrame([
             {
                 "temperature": data["configuration"]["temperature"],
                 "top_p": data["configuration"]["top_p"],
                 "dtype": data["configuration"]["dtype"],
-                "batch_size": data["configuration"]["batch_size"],
+                "max_num_seqs": data["configuration"]["max_num_seqs"],
+                "max_num_batched_tokens": data["configuration"]["max_num_batched_tokens"],
                 "dataset": data["configuration"]["dataset"],
+                "max_model_length": data["configuration"]["max_model_length"],
                 "accuracy": data["results"]["accuracy"],
                 "accuracy_std_dev": data["results"]["accuracy_std_dev"],
                 "total_token_length": data["results"]["total_token_length"],

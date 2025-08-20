@@ -10,6 +10,9 @@ source /projects/bdrx/azhang14/env/test/bin/activate
 
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
+# Set the number of threads
+# export OMP_NUM_THREADS=number of threads
+
 python -c "import torch; print(torch.cuda.is_available())"
 python -c "import torch; print(torch.cuda.device_count())"
 nvidia-smi topo -m
@@ -20,12 +23,12 @@ SYSTEM_PROMPT=$(python -c "import json; print(json.load(open('$PROMPTS_PATH'))['
 
 MODELS=(
     deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
-    deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
-    deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
-    Qwen/Qwen3-1.7B
-    Qwen/Qwen3-4B
-    Qwen/Qwen3-8B
-    Qwen/Qwen3-14B
+    # deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+    # deepseek-ai/DeepSeek-R1-Distill-Qwen-14B
+    # Qwen/Qwen3-1.7B
+    # Qwen/Qwen3-4B
+    # Qwen/Qwen3-8B
+    # Qwen/Qwen3-14B
 )
 
 MAX_NUM_SEQUENCES=(8)
@@ -34,20 +37,20 @@ MAX_NUM_SEQUENCES=(8)
 MAX_NUM_BATCHED_TOKENS=(65536)
 
 TOP_PS=(
-    # 0.8 
+    0.8 
     0.9 
-    # 0.95 
+    0.95 
     # 0.98 
     # 1.0
 )
 
 
 TEMPS=(
-    # 0.0 
+    0.0 
     # 0.2 
     # 0.4 
     # 0.6 
-    0.8 
+    # 0.8 
     # 1.0
 )
 
@@ -79,8 +82,8 @@ set -x
 
 SEEDS=(
     0
-    1
-    2
+    # 1
+    # 2
     # 3
     # 4 
     # 42 
@@ -92,8 +95,8 @@ SEEDS=(
     # 911
     # 999
     # 1000
-    # 2023
-    # 2025 
+    # 2025
+    # 2026 
 )
 
 TASKS=(
@@ -128,8 +131,8 @@ for TASK in "${TASKS[@]}"; do
 done
 done
 
-# Analysis and Conversion
-echo "Starting analysis and conversion..."
+# Analysis every experiments
+echo "Starting analysis..."
 
 MODEL_NAME_WITH_SLASH="${MODELS[0]}"
 MODEL_NAME_WITH_UNDERSCORE=$(echo "$MODEL_NAME_WITH_SLASH" | sed 's/\//_/g')
@@ -140,6 +143,25 @@ python $LOCAL_DIR/analyze_results.py \
     --model_name_pattern "$MODEL_NAME_WITH_UNDERSCORE" \
     --tokenizer_name "$MODEL_NAME_WITH_SLASH"
 
+# Convert parquet to csv
+echo "Converting Parquet files to CSV..."
+find "$OUTPUT_DIR" -type f -name "*.parquet" | while read -r parquet_file; do
+    python $LOCAL_DIR/convert_parquet_to_csv.py "$parquet_file"
+done
+
+echo "Analysis complete."
+
+done
+done
+done
+done
+done
+done
+done
+done
+
+echo "Generating summary analysis..."
+
 RESULTS_PATH="$OUTPUT_DIR/$MODEL_NAME_WITH_UNDERSCORE/all_experiments_results.json"
 ANALYSIS_OUTPUT_PATH="$OUTPUT_DIR/$MODEL_NAME_WITH_UNDERSCORE/analysis_results.json"
 
@@ -147,19 +169,4 @@ python $LOCAL_DIR/analyze_summary.py \
     --results-path "$RESULTS_PATH" \
     --output-path "$ANALYSIS_OUTPUT_PATH"
 
-# Convert parquet to csv
-echo "Converting Parquet files to CSV..."
-find "$OUTPUT_DIR" -type f -name "*.parquet" | while read -r parquet_file; do
-    python $LOCAL_DIR/convert_parquet_to_csv.py "$parquet_file"
-done
-
-echo "Analysis and conversion complete."
-
-done
-done
-done
-done
-done
-done
-done
-done
+echo "Summary analysis complete."
