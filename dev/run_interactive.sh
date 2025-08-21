@@ -31,16 +31,11 @@ MODELS=(
     # Qwen/Qwen3-14B
 )
 
-MAX_NUM_SEQUENCES=(8)
+MAX_NUM_SEQUENCES= 8
     
 
-MAX_NUM_BATCHED_TOKENS=(
-    # 262144
-    # 131072
-    65536
-    # 32768
-    # 16384
-)
+MAX_NUM_BATCHED_TOKENS= 65536
+
 
 TOP_PS=(
     0.8 
