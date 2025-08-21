@@ -6,12 +6,12 @@ module load cuda/12.6
 conda init
 source ~/.bashrc
 conda deactivate
-source /projects/bdrx/azhang14/env/test/bin/activate
+source /projects/bdrx/azhang14/env/real/bin/activate
 
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 # Set the number of threads
-# export OMP_NUM_THREADS=number of threads
+export OMP_NUM_THREADS=16
 
 python -c "import torch; print(torch.cuda.is_available())"
 python -c "import torch; print(torch.cuda.device_count())"
@@ -34,7 +34,13 @@ MODELS=(
 MAX_NUM_SEQUENCES=(8)
     
 
-MAX_NUM_BATCHED_TOKENS=(65536)
+MAX_NUM_BATCHED_TOKENS=(
+    # 262144
+    # 131072
+    65536
+    # 32768
+    # 16384
+)
 
 TOP_PS=(
     0.8 
@@ -55,9 +61,9 @@ TEMPS=(
 )
 
 DTYPES=(
-    "bfloat16" 
+    # "bfloat16" 
     # "float16" 
-    # "float32"
+    "float32"
 )
 
 MAX_MODEL_LENGTHS=(
@@ -71,8 +77,6 @@ MAX_TOKENS_LIST=(
 for MAX_MODEL_LENGTH in "${MAX_MODEL_LENGTHS[@]}"; do
 for MAX_TOKENS in "${MAX_TOKENS_LIST[@]}"; do
 for MODEL in "${MODELS[@]}"; do
-for MAX_NUM_SEQUENCES in "${MAX_NUM_SEQUENCES[@]}"; do
-for MAX_NUM_BATCHED_TOKENS in "${MAX_NUM_BATCHED_TOKENS[@]}"; do
 for DTYPE in "${DTYPES[@]}"; do
 for TOP_P in "${TOP_PS[@]}"; do
 for TEMP in "${TEMPS[@]}"; do
@@ -125,7 +129,7 @@ for TASK in "${TASKS[@]}"; do
         --dtype $DTYPE \
         --max_num_seqs $MAX_NUM_SEQUENCES \
         --max_num_batched_tokens $MAX_NUM_BATCHED_TOKENS \
-        --tensor_parallel_size 1 \
+        --tensor_parallel_size 4 \
         --pipeline_parallel_size 1 \
         --data_parallel_size 1 
 done
@@ -151,8 +155,6 @@ done
 
 echo "Analysis complete."
 
-done
-done
 done
 done
 done
